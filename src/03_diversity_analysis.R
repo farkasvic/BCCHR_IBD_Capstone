@@ -1,11 +1,10 @@
-# 03_diversity_analysis.R: Diversity stats and plots
+# 03_diversity_analysis.R: Diversity plots
 
 # ---- Setup ----
 suppressPackageStartupMessages({
   library(dplyr)
   library(ggplot2)
   library(grid)
-  library(rstatix)
 })
 
 source("src/00_functions.R")
@@ -106,30 +105,4 @@ ggsave(
 cat("\nCreated Fiber Plot\n")
 
 
-# ---- Test Study Group Differences ----
-
-kw_results <- alpha_long %>%
-  group_by(Diversity_metric) %>%
-  kruskal_test(Value ~ Study_group_new)
-
-cat("\nKW Results for Diversity Metrics by Study Group:\n")
-print(kw_results)
-
-# ---- Save Diversity Results ----
-
-write.csv(kw_results, "./data/intermediate/KW_diversity_group.csv")
-
-# ---- Test Study Group Differences ----
-
-kw_results <- alpha_long %>%
-  group_by(Diversity_metric) %>%
-  kruskal_test(Value ~ Fiber_restriction)
-
-cat("\nKW Results for Diversity Metrics by Fibre Restricted Diet:\n")
-print(kw_results)
-
-# ---- Save Diversity Results ----
-
-write.csv(kw_results, "./data/processed/KW_diversity_fibre.csv")
-
-message("03_diversity_analysis.R completed: Diversity analysis done.")
+message("03_diversity_analysis.R completed: Diversity plots done.")

@@ -1,4 +1,4 @@
-# 02_data_wrangling.R: Meta data, joining, long-format conversion, NA handling, removals
+# 02_data_wrangling.R: Metadata joins, reshaping, NA handling, removals
 
 # ---- Setup ----
 

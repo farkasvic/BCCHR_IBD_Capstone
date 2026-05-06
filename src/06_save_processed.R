@@ -26,18 +26,25 @@ for (obj in objs) {
 # ---- Save Combined Long Taxa CSV ----
 
 combined_taxa_long <- bind_rows(
-  taxa_long_list$phylum |> mutate(level = "phylum", taxa = Phylum) |>
+  taxa_long_list$phylum |>
+    mutate(level = "phylum", taxa = Phylum) |>
     select(-Phylum),
-  taxa_long_list$family |> mutate(level = "family", taxa = Family) |>
+  taxa_long_list$family |>
+    mutate(level = "family", taxa = Family) |>
     select(-Family),
-  taxa_long_list$genus |> mutate(level = "genus", taxa = Genus) |>
+  taxa_long_list$genus |>
+    mutate(level = "genus", taxa = Genus) |>
     select(-Genus),
-  taxa_long_list$species |> mutate(level = "species", taxa = Species) |>
+  taxa_long_list$species |>
+    mutate(level = "species", taxa = Species) |>
     select(-Species)
 )
 
 str(combined_taxa_long)
 
-write.csv(combined_taxa_long, "./data/processed/combined_taxa_long.csv", row.names = FALSE)
+write.csv(combined_taxa_long,
+  "./data/processed/combined_taxa_long.csv",
+  row.names = FALSE
+)
 
 message("06_save_processed.R completed: Processed data saved.")

@@ -1,5 +1,11 @@
 # Shared utility functions for microbiome analysis
 
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+})
+
 # ---- Plot Theme ----
 
 theme_micro <- function(base_size = 12) {
