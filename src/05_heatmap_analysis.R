@@ -3,11 +3,11 @@
 # ---- Setup ----
 
 suppressPackageStartupMessages({
-    library(dplyr)
-    library(tidyr)
-    library(tibble)
-    library(ComplexHeatmap)
-    library(grid)
+  library(dplyr)
+  library(tidyr)
+  library(tibble)
+  library(ComplexHeatmap)
+  library(grid)
 })
 
 source("src/00_functions.R")
@@ -37,19 +37,27 @@ saveRDS(phylum_z, "./data/intermediate/phylum_z.rds")
 
 # ---- Plot Heatmaps ----
 
-png("./figures/mycobiome/heat_family.png", width = 10, height = 8, units = "in", res = 300)
+png("./figures/mycobiome/heat_family.png",
+  width = 10, height = 8, units = "in", res = 300
+)
 plot_taxa_heatmap(family_z, meta_data, row_label = "Fungal Family")
 dev.off()
 
-png("./figures/mycobiome/heat_genus.png", width = 10, height = 8, units = "in", res = 300)
+png("./figures/mycobiome/heat_genus.png",
+  width = 10, height = 8, units = "in", res = 300
+)
 plot_taxa_heatmap(genus_z, meta_data, row_label = "Fungal Genus")
 dev.off()
 
-png("./figures/mycobiome/heat_species.png", width = 10, height = 8, units = "in", res = 300)
+png("./figures/mycobiome/heat_species.png",
+  width = 10, height = 8, units = "in", res = 300
+)
 plot_taxa_heatmap(species_z, meta_data, row_label = "Fungal Species")
 dev.off()
 
-png("./figures/mycobiome/heat_phylum.png", width = 10, height = 8, units = "in", res = 300)
+png("./figures/mycobiome/heat_phylum.png",
+  width = 10, height = 8, units = "in", res = 300
+)
 plot_taxa_heatmap(phylum_z, meta_data, row_label = "Fungal Phylum")
 dev.off()
 

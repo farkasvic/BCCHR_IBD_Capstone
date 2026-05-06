@@ -13,10 +13,10 @@ library(janitor)
 file_path <- "./data/raw/OPT_stool mycobiota relative abund.xlsx"
 sheets <- excel_sheets(file_path)
 data_list <- setNames(
-    lapply(sheets, function(s) {
-        read_excel(file_path, sheet = s)
-    }),
-    make_clean_names(sheets)
+  lapply(sheets, function(s) {
+    read_excel(file_path, sheet = s)
+  }),
+  make_clean_names(sheets)
 )
 
 meta_raw <- read_excel("./data/raw/OPT_MBI sample IDs meta.xlsx")

@@ -30,38 +30,57 @@ def _load_characteristics(path: str) -> pd.DataFrame:
 def merge_genus_species(genus: pd.DataFrame, species: pd.DataFrame) -> pd.DataFrame:
     """Inner join genus and species microbiome matrices on Sample_ID."""
     genus = genus.copy()
-    species_only = species[[c for c in species.columns if c not in META_COLS or c == "Sample_ID"]].copy()
+    species_only = species[
+        [c for c in species.columns if c not in META_COLS or c == "Sample_ID"]
+    ].copy()
     if "NA" in genus.columns and "NA" in species_only.columns:
         species_only = species_only.rename(columns={"NA": "NA_species"})
     merged = genus.merge(species_only, on="Sample_ID", how="inner")
-    merged["Participant_ID"] = merged["Participant_ID"].astype(str).str.upper().str.strip()
+    merged["Participant_ID"] = (
+        merged["Participant_ID"].astype(str).str.upper().str.strip()
+    )
     return merged
 
 
-def merge_characteristics_genus_species(chars: pd.DataFrame, genus_species: pd.DataFrame) -> pd.DataFrame:
+def merge_characteristics_genus_species(
+    chars: pd.DataFrame, genus_species: pd.DataFrame
+) -> pd.DataFrame:
     """Inner join cleaned characteristics with processed genus/species."""
     gs = genus_species.copy()
-    merged = chars.merge(gs, left_on="participant_id", right_on="Participant_ID", how="inner")
+    merged = chars.merge(
+        gs, left_on="participant_id", right_on="Participant_ID", how="inner"
+    )
     if "participant_id" in merged.columns and "Participant_ID" in merged.columns:
         merged = merged.drop(columns=["Participant_ID"])
     return merged
 
 
-def merge_characteristics_dietary(chars: pd.DataFrame, dietary: pd.DataFrame) -> pd.DataFrame:
+def merge_characteristics_dietary(
+    chars: pd.DataFrame, dietary: pd.DataFrame
+) -> pd.DataFrame:
     """Inner join characteristics with cleaned dietary (participant_id + aligned timepoints)."""
     d = dietary.copy()
     pid_col = "Participant ID (ESHA ID)"
     tp_col = "Timepoint "
 
     chars = chars.copy()
-    chars["_merge_tp"] = chars["event_name"].astype(str).str.extract(r"(T\d+)", expand=False)
+    chars["_merge_tp"] = (
+        chars["event_name"].astype(str).str.extract(r"(T\d+)", expand=False)
+    )
 
     d["_pid_norm"] = d[pid_col].astype(str).str.upper().str.strip()
     d["_tp_norm"] = d[tp_col].astype(str).str.strip()
 
-    merged = chars.merge(d, left_on=["participant_id", "_merge_tp"], right_on=["_pid_norm", "_tp_norm"], how="inner")
+    merged = chars.merge(
+        d,
+        left_on=["participant_id", "_merge_tp"],
+        right_on=["_pid_norm", "_tp_norm"],
+        how="inner",
+    )
 
-    merged = merged.drop(columns=["_merge_tp", "_pid_norm", "_tp_norm"], errors="ignore")
+    merged = merged.drop(
+        columns=["_merge_tp", "_pid_norm", "_tp_norm"], errors="ignore"
+    )
     return merged
 
 
@@ -155,7 +174,9 @@ genus_species = merge_genus_species(genus, species)
 out1 = merge_characteristics_genus_species(characteristics, genus_species)
 out1_path = os.path.join(processed_dir, "characteristics_genus_species_inner.csv")
 out1.to_csv(out1_path, index=False)
-print(f"Saved (characteristics + genus + species, inner): {out1_path} — {len(out1)} rows")
+print(
+    f"Saved (characteristics + genus + species, inner): {out1_path} — {len(out1)} rows"
+)
 
 out2 = merge_characteristics_dietary(characteristics, dietary)
 out2_path = os.path.join(processed_dir, "characteristics_dietary_inner.csv")
@@ -163,11 +184,15 @@ out2.to_csv(out2_path, index=False)
 print(f"Saved (characteristics + dietary, inner): {out2_path} — {len(out2)} rows")
 
 out3 = merge_characteristics_dietary(out1, dietary)
-out3_path = os.path.join(processed_dir, "characteristics_genus_species_dietary_inner.csv")
+out3_path = os.path.join(
+    processed_dir, "characteristics_genus_species_dietary_inner.csv"
+)
 out3.to_csv(out3_path, index=False)
 print(f"Saved (all sources, inner): {out3_path} — {len(out3)} rows")
 
 out4 = merge_dietary_genus_species_via_mbi(genus_species, dietary, mbi)
 out4_path = os.path.join(processed_dir, "dietary_genus_species_mbi_inner.csv")
 out4.to_csv(out4_path, index=False)
-print(f"Saved (dietary + genus + species via MBI, inner): {out4_path} — {len(out4)} rows")
+print(
+    f"Saved (dietary + genus + species via MBI, inner): {out4_path} — {len(out4)} rows"
+)
