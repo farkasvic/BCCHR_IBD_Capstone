@@ -14,9 +14,9 @@ an analysis pipeline for IBD data
 - `data/processed`: processed outputs
 - `figures/mycobiome`: generated figures
 - `src/mycobiome`: main R pipeline
-- `src/characteristics`, `src/diet`, `src/merge_files.py`: helper utilities
+- `src/characteristics`, `src/diet`, `src/merge_files.py`: utils
 
-## Quick Start
+## Quick start
 
 Run commands from the repository root
 
@@ -32,16 +32,35 @@ To see the available commands:
 make help
 ```
 
-## Common Targets
+## Common targets
 
 ```sh
 make import
 make wrangle
-make diversity
-make abundance
-make heatmap
 make save
 make clean
 make r-check
 make python-check
+```
+
+## All Commands (so far)
+```sh
+make help
+make setup
+make snapshot
+make renv-status
+make renv-clean
+make python-env
+make python-prune
+make python-check
+make r-check
+make import
+make wrangle
+make diversity
+make diversity-stats
+make abundance
+make heatmap
+make save
+make clean
+make ALL
 ```
