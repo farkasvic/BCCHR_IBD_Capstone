@@ -71,9 +71,13 @@ renv/staging/
 *.tiff
 
 # Processed outputs
-data/intermediate/
+data/intermediate/*
+!data/intermediate/.gitkeep
 data/processed/*.csv
-figures/mycobiome/
+data/processed/*.rds
+!data/processed/.gitkeep
+figures/mycobiome/*
+!figures/mycobiome/.gitkeep
 
 # OS files
 .DS_Store

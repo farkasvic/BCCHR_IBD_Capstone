@@ -99,8 +99,10 @@ ALL:
 
 clean:
 	@printf "%b\n" "$(YELLOW)Cleaning intermediate and generated files...$(RESET)"
-	@rm -rf data/intermediate/* data/processed/* figures/mycobiome/*
-	@rm -f notebook/*.nb.html
+	@rm -f data/intermediate/*.rds data/intermediate/*.csv data/intermediate/*.xlsx
+	@rm -f data/processed/*.rds data/processed/*.csv data/processed/*.xlsx
+	@rm -f figures/mycobiome/*.png figures/mycobiome/*.jpg figures/mycobiome/*.jpeg figures/mycobiome/*.tiff figures/mycobiome/*.pdf
+	@rm -f notebooks/*.nb.html notebooks/*.html notebooks/*.pdf
 	@printf "%b\n" "$(GREEN)Clean complete.$(RESET)"
 
 import:
