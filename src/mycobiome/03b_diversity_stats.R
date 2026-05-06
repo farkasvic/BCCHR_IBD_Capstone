@@ -36,7 +36,7 @@ print(kw_diversity_fibre)
 
 write.csv(
   kw_diversity_group,
-  "./data/intermediate/KW_diversity_group.csv",
+  "./data/processed/KW_diversity_group.csv",
   row.names = FALSE
 )
 write.csv(

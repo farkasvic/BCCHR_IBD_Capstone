@@ -11,6 +11,7 @@ PY_ENV := bcchrcapstone
 PY_ENV_FILE := environment.yaml
 PY_SRC := src
 R_SRC := src
+MYCO_SRC := src/mycobiome
 
 .PHONY: help setup snapshot renv-status renv-clean python-env python-prune python-check r-check process all clean import wrangle diversity diversity-stats abundance heatmap save
 
@@ -88,53 +89,51 @@ r-check:
 
 ALL:
 	@printf "%b\n" "$(CYAN)Running full processing pipeline...$(RESET)"
-	Rscript src/01_data_import.R
-	Rscript src/02_data_wrangling.R
-	Rscript src/03_diversity_analysis.R
-	Rscript src/04_abundance_analysis.R
-	Rscript src/05_heatmap_analysis.R
-	Rscript src/06_save_processed.R
+	Rscript $(MYCO_SRC)/01_data_import.R
+	Rscript $(MYCO_SRC)/02_data_wrangling.R
+	Rscript $(MYCO_SRC)/03_diversity_analysis.R
+	Rscript $(MYCO_SRC)/04_abundance_analysis.R
+	Rscript $(MYCO_SRC)/05_heatmap_analysis.R
+	Rscript $(MYCO_SRC)/06_save_processed.R
 	@printf "%b\n" "$(GREEN)Processing complete.$(RESET)"
 
 clean:
 	@printf "%b\n" "$(YELLOW)Cleaning intermediate and generated files...$(RESET)"
-	@rm -rf data/intermediate/*.rds
-	@rm -f data/processed/*.csv
-	@rm -f figures/mycobiome/*.png
+	@rm -rf data/intermediate/* data/processed/* figures/mycobiome/*
 	@rm -f notebook/*.nb.html
 	@printf "%b\n" "$(GREEN)Clean complete.$(RESET)"
 
 import:
 	@printf "%b\n" "$(CYAN)Importing raw data...$(RESET)"
-	Rscript src/01_data_import.R
+	Rscript $(MYCO_SRC)/01_data_import.R
 	@printf "%b\n" "$(GREEN)Import complete.$(RESET)"
 
 wrangle:
 	@printf "%b\n" "$(CYAN)Wrangling data...$(RESET)"
-	Rscript src/02_data_wrangling.R
+	Rscript $(MYCO_SRC)/02_data_wrangling.R
 	@printf "%b\n" "$(GREEN)Wrangle complete.$(RESET)"
 
 diversity:
 	@printf "%b\n" "$(CYAN)Creating diversity plots...$(RESET)"
-	Rscript src/03_diversity_analysis.R
+	Rscript $(MYCO_SRC)/03_diversity_analysis.R
 	@printf "%b\n" "$(GREEN)Diversity plots complete.$(RESET)"
 
 diversity-stats:
 	@printf "%b\n" "$(CYAN)Running pre-specified diversity statistics...$(RESET)"
-	Rscript --vanilla src/03b_diversity_stats.R
+	Rscript --vanilla $(MYCO_SRC)/03b_diversity_stats.R
 	@printf "%b\n" "$(GREEN)Diversity statistics complete.$(RESET)"
 
 abundance:
 	@printf "%b\n" "$(CYAN)Creating abundance plots...$(RESET)"
-	Rscript src/04_abundance_analysis.R
+	Rscript $(MYCO_SRC)/04_abundance_analysis.R
 	@printf "%b\n" "$(GREEN)Abundance plots complete.$(RESET)"
 
 heatmap:
 	@printf "%b\n" "$(CYAN)Generating heatmaps...$(RESET)"
-	Rscript src/05_heatmap_analysis.R
+	Rscript $(MYCO_SRC)/05_heatmap_analysis.R
 	@printf "%b\n" "$(GREEN)Heatmap generation complete.$(RESET)"
 
 save:
 	@printf "%b\n" "$(CYAN)Saving processed outputs...$(RESET)"
-	Rscript src/06_save_processed.R
+	Rscript $(MYCO_SRC)/06_save_processed.R
 	@printf "%b\n" "$(GREEN)Save complete.$(RESET)"
