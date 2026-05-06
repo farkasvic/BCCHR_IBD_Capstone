@@ -42,25 +42,3 @@ make clean
 make r-check
 make python-check
 ```
-
-## All Commands (so far)
-```sh
-make help
-make setup
-make snapshot
-make renv-status
-make renv-clean
-make python-env
-make python-prune
-make python-check
-make r-check
-make import
-make wrangle
-make diversity
-make diversity-stats
-make abundance
-make heatmap
-make save
-make clean
-make ALL
-```
