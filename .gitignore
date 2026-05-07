@@ -62,13 +62,13 @@ renv/python/
 renv/staging/
 
 # Generated notebooks and outputs
-*.nb.html
-*.html
-*.pdf
-*.png
-*.jpg
-*.jpeg
-*.tiff
+# *.nb.html
+# *.html
+# *.pdf
+# *.png
+# *.jpg
+# *.jpeg
+# *.tiff
 
 # Processed outputs
 data/intermediate/*
