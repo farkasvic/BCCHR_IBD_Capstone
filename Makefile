@@ -84,7 +84,7 @@ r-check:
 	@printf "%b\n" "$(CYAN)Formatting R files with styler...$(RESET)"
 	XDG_CACHE_HOME=/tmp Rscript --vanilla -e "styler::style_dir('$(R_SRC)')"
 	@printf "%b\n" "$(CYAN)Running lintr checks...$(RESET)"
-	Rscript --vanilla -e "lints <- lintr::lint_dir('$(R_SRC)', linters = lintr::linters_with_defaults(object_usage_linter = NULL)); print(lints); quit(status = length(lints) > 0)"
+	Rscript --vanilla -e "lints <- lintr::lint_dir('$(R_SRC)'); print(lints); quit(status = length(lints) > 0)"
 	@printf "%b\n" "$(GREEN)R formatting and lint checks complete.$(RESET)"
 
 ALL:
