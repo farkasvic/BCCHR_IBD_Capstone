@@ -1,0 +1,32 @@
+---
+title: "Plot Exploration"
+output: html_document
+---
+
+```{r setup}
+library(dplyr)
+library(tidyr)
+library(plotly)
+
+participant_data <- read.csv("../../data/processed/characteristics_genus_species_dietary_inner.csv")
+genus_cols <- grep("^g__", names(participant_data), value = TRUE)
+```
+
+# Import
+
+```{r}
+
+```
+
+# Composition
+
+
+
+# Relationships
+
+## Disease Associated Mycobiome Signatures
+
+### Maybe interactive heat map?
+
+
+
