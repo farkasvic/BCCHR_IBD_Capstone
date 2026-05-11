@@ -75,6 +75,7 @@ data/intermediate/*
 !data/intermediate/.gitkeep
 data/processed/*.csv
 data/processed/*.rds
+data/processed/*.xlsx
 !data/processed/.gitkeep
 figures/mycobiome/*
 !figures/mycobiome/.gitkeep

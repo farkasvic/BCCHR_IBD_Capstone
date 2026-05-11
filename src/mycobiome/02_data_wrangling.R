@@ -24,7 +24,25 @@ meta_data <- meta_raw |>
     Sample_ID, Participant_ID, Sample_type,
     Study_group_new, Fiber_restriction
   ) |>
-  distinct()
+  distinct() |>
+  mutate(
+    Participant_ID = gsub("_(\\d)$", "_0\\1", toupper(trimws(Participant_ID)))
+  )
+
+# Confirm any IDs were normalised
+raw_ids <- unique(toupper(trimws(
+  rename(meta_raw, Participant_ID = `Participant ID`)$Participant_ID
+)))
+fixed_ids <- unique(meta_data$Participant_ID)
+changed <- setdiff(
+  gsub("_(\\d)$", "_0\\1", raw_ids), raw_ids
+) |> intersect(fixed_ids)
+if (length(changed)) {
+  cat("Participant IDs normalised to two-digit suffix:\n")
+  print(changed)
+} else {
+  cat("All Participant IDs already use two-digit suffix.\n")
+}
 
 
 # ---- Attach Metadata to Each Table ----
