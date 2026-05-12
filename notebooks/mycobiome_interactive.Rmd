@@ -7,6 +7,26 @@ output:
     code_folding: hide
 ---
 
+# Introduction
+
+### Rationale for exploratory association analyses
+
+How to integrate microbiome, dietary, and clinical metadata to identify microbial signatures associated with inflammation or dietary patterns.
+
+Continuous-by-continuous comparisons?
+
+-   Scatterplots to examine whether fungal diversity or candidate fungal taxa vary with continuous dietary or character variables.
+
+-   diversity x fiber intake, candidate fungal abundance x nutrient variables
+
+-   Inflammation / IBD potential candidates: increase in *Candida albicans*, decrease in *Saccharomyces cerevisiae*, *Saccharomyces*, *Candida*, and the Basidiomycota:Ascomycota ratio.
+
+Categorical-by-continuous comparisons?
+
+-   Box plots of fungal diversity or candidate taxa across disease activity groups or HBI score?
+
+Candidate fungal features in literature: *Candida albicans*, *Saccharomyces cerevisiae*, *Saccharomyces*, *Candida*, and the Basidiomycota:Ascomycota ratio.
+
 ```{r setup, message=FALSE, warning=FALSE}
 library(dplyr)
 library(tidyr)
@@ -90,8 +110,6 @@ check <- distinct(merged, Sample_ID, Participant_ID, Study_group_new)
 check <- distinct(alpha_long, Sample_ID, Participant_ID, Study_group_new)
 
 ```
-
-
 
 ------------------------------------------------------------------------
 
@@ -184,7 +202,6 @@ plot_scatter(scatter_df, "Tryptophan (g)", "Shannon",
 
 ### Artificial sweeteners × diversity
 
-
 ```{r}
 unique(scatter_df$`Artificial sweeteners (mg)`)
 unique(scatter_df$ratio_basidio_asco)
@@ -196,7 +213,7 @@ unique(scatter_df$ratio_basidio_asco)
 #              y_label = "Shannon")
 ```
 
-### Age × Basidio:Asco ratio
+### Age × Diversity
 
 ```{r scatter-age-diversity}
 plot_scatter(scatter_df, "Age", "Shannon",
@@ -229,10 +246,10 @@ plot_box <- function(df, y_col, y_label = y_col) {
 }
 ```
 
-
 ```{r}
 table(scatter_df$Disease_status, scatter_df$`Harvey-Bradshaw Index`)
 ```
+
 ```{r}
 table(scatter_df$Disease_status)
 ```
@@ -242,7 +259,6 @@ table(scatter_df$Disease_status)
 ```{r box-shannon}
 plot_box(scatter_df, "Shannon", "Shannon diversity")
 ```
-
 
 ### C. albicans by study group
 
@@ -291,7 +307,6 @@ scatter_df |>
   theme_minimal()
 ```
 
-
 ```{r hbi-box-fn}
 plot_hbi_box <- function(df, y_col, y_label = y_col) {
   plot_data <- df |>
@@ -319,7 +334,6 @@ plot_hbi_box <- function(df, y_col, y_label = y_col) {
   ggplotly(p, tooltip = "text")
 }
 ```
-
 
 ### Basidio:Asco ratio by HBI category
 
@@ -350,4 +364,3 @@ plot_hbi_box(scatter_df, "Shannon", "Shannon diversity")
 # Individual
 
 ## Mycobiome composition per patient
-
