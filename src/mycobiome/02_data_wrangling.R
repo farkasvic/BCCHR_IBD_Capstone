@@ -7,6 +7,7 @@ suppressPackageStartupMessages({
   library(tidyr)
 })
 
+source("src/participant_id.R")
 source("src/mycobiome/00_functions.R")
 
 
@@ -24,7 +25,29 @@ meta_data <- meta_raw |>
     Sample_ID, Participant_ID, Sample_type,
     Study_group_new, Fiber_restriction
   ) |>
-  distinct()
+  distinct() |>
+  mutate(
+    Participant_ID = normalize_participant_id(Participant_ID)
+  )
+
+# Confirm any IDs were normalised (compare raw xlsx to normalized values)
+raw_xlsx <- "data/raw/OPT_MBI sample IDs meta.xlsx"
+if (requireNamespace("readxl", quietly = TRUE) && file.exists(raw_xlsx)) {
+  raw_tab <- readxl::read_excel(raw_xlsx)
+  raw_ids <- unique(
+    toupper(trimws(as.character(raw_tab[["Participant ID"]])))
+  )
+  norm_ids <- normalize_participant_id(raw_ids)
+  changed_idx <- !is.na(raw_ids) & !is.na(norm_ids) & norm_ids != raw_ids
+  if (any(changed_idx)) {
+    cat("Participant IDs normalised to PREFIX_NN (two-digit suffix):\n")
+    print(unique(paste0(raw_ids[changed_idx], " -> ", norm_ids[changed_idx])))
+  } else {
+    cat("All Participant IDs already use two-digit suffix (raw xlsx).\n")
+  }
+} else {
+  cat("(Skipped raw-vs-normalized ID message: readxl or raw meta xlsx missing.)\n")
+}
 
 
 # ---- Attach Metadata to Each Table ----

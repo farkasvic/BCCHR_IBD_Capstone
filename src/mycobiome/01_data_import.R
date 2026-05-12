@@ -20,6 +20,8 @@ data_list <- setNames(
 )
 
 meta_raw <- read_excel("./data/raw/OPT_MBI sample IDs meta.xlsx")
+source(file.path("src", "participant_id.R"))
+meta_raw$`Participant ID` <- normalize_participant_id(meta_raw$`Participant ID`)
 
 
 # ---- Save Imported Data ----
