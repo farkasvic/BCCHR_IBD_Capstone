@@ -1,16 +1,17 @@
 # merge_files.R
 # Merge clean characteristics and diet files to the mycobiome data
-
-library(dplyr)
-library(tidyr)
-library(readr)
-library(readxl)
-library(here)
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(readr)
+  library(readxl)
+  library(here)
+})
 
 # ── Paths ────────────────────────────────────────────────────────────
 # Set up directories
 intermediate_dir <- here("data", "intermediate")
-processed_dir    <- here("data", "processed")
+processed_dir <- here("data", "processed")
 dir.create(processed_dir, showWarnings = FALSE, recursive = TRUE)
 
 # Meta Columns
@@ -79,8 +80,8 @@ aggregate_dietary <- function(dietary) {
 # Defensive programming
 required_files <- c(
   taxa            = file.path(intermediate_dir, "taxa_long_list.rds"),
-  characteristics = file.path(processed_dir,   "cleaned_characteristics.csv"),
-  dietary         = file.path(processed_dir,   "dietary_cleaned.xlsx")
+  characteristics = file.path(processed_dir, "cleaned_characteristics.csv"),
+  dietary         = file.path(processed_dir, "dietary_cleaned.xlsx")
 )
 missing <- required_files[!file.exists(required_files)]
 if (length(missing)) {
@@ -94,15 +95,15 @@ if (length(missing)) {
 df <- read_excel(required_files["dietary"])
 
 
-# Load 
-taxa_list   <- readRDS(required_files["taxa"])
-chars       <- load_characteristics(required_files["characteristics"])
+# Load
+taxa_list <- readRDS(required_files["taxa"])
+chars <- load_characteristics(required_files["characteristics"])
 dietary_agg <- aggregate_dietary(load_dietary(required_files["dietary"]))
 
 # Pivot each taxa level to wide and left-join on meta columns so no
 # samples are dropped if a level is missing a taxon.
 taxa_wide <- pivot_taxa(taxa_list[["phylum"]], "p__") |>
-  left_join(pivot_taxa(taxa_list[["genus"]],   "g__"), by = meta_cols) |>
+  left_join(pivot_taxa(taxa_list[["genus"]], "g__"), by = meta_cols) |>
   left_join(pivot_taxa(taxa_list[["species"]], "s__"), by = meta_cols)
 
 # ── Match diagnostics (mycobiome as limiting dataset) ─────────────────────
@@ -114,15 +115,19 @@ char_ids <- unique(chars$participant_id)
 diet_ids <- unique(dietary_agg$participant_id)
 
 report_match <- function(myco, other, label) {
-  matched   <- intersect(myco, other)
+  matched <- intersect(myco, other)
   myco_only <- setdiff(myco, other)
   other_only <- setdiff(other, myco)
   message(
     label, " match:\n",
-    "  matched:        ", length(matched),   " / ", length(myco), " mycobiome participants\n",
+    "  matched:        ", length(matched), " / ",
+    length(myco), " mycobiome participants\n",
     "  missing in ", label, ": ",
-    if (length(myco_only) == 0) "none"
-    else paste(myco_only, collapse = ", "), "\n"
+    if (length(myco_only) == 0) {
+      "none"
+    } else {
+      paste(myco_only, collapse = ", ")
+    }, "\n"
   )
 }
 
@@ -132,7 +137,7 @@ report_match(myco_ids, diet_ids, "dietary")
 # One wide table: taxa is the anchor — chars and dietary are left-joined so
 # mycobiome samples are never dropped when other data is missing.
 merged <- taxa_wide |>
-  left_join(chars,       by = c("Participant_ID" = "participant_id")) |>
+  left_join(chars, by = c("Participant_ID" = "participant_id")) |>
   left_join(dietary_agg, by = c("Participant_ID" = "participant_id"))
 
 out_path <- file.path(processed_dir, "merged.csv")
