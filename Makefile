@@ -14,7 +14,7 @@ R_SRC := src
 DASH := dashboard
 MYCO_SRC := src/mycobiome
 
-.PHONY: help setup snapshot renv-status renv-clean python-env python-prune python-check r-check process all clean import wrangle diversity diversity-stats abundance heatmap save merge app
+.PHONY: help setup snapshot renv-status renv-clean python-env python-prune python-check r-check process all clean import wrangle diversity diversity-stats abundance heatmap save merge normalize-ids app
 
 help:
 	@printf "%b\n" "$(CYAN)Available commands:$(RESET)"
@@ -48,6 +48,7 @@ help:
 	@printf "%b\n" ""
 	@printf "%b\n" "$(CYAN)Domain Relationships:$(RESET)"
 	@printf "%b\n" "  $(YELLOW)make merge$(RESET)       - Merge domain datasets into combined output"
+	@printf "%b\n" "  $(YELLOW)make normalize-ids$(RESET) - Audit participant IDs and write normalized meta CSV"
 	@printf "%b\n" ""
 	@printf "%b\n" "$(CYAN)Launch App:$(RESET)"
 	@printf "%b\n" "  $(YELLOW)make app$(RESET)         - Launch the Shiny dashboard"
@@ -151,6 +152,11 @@ merge:
 	@printf "%b\n" "$(CYAN)Merging domain datasets...$(RESET)"
 	Rscript $(R_SRC)/merge_files.R
 	@printf "%b\n" "$(GREEN)Merge complete.$(RESET)"
+
+normalize-ids:
+	@printf "%b\n" "$(CYAN)Auditing and normalizing participant IDs...$(RESET)"
+	Rscript scripts/normalize_participant_ids.R
+	@printf "%b\n" "$(GREEN)Participant ID audit complete.$(RESET)"
 
 app:
 	@printf "%b\n" "$(CYAN)Launching Shiny dashboard...$(RESET)"

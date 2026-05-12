@@ -8,6 +8,8 @@ suppressPackageStartupMessages({
   library(here)
 })
 
+source(here("src", "participant_id.R"))
+
 # ── Paths ────────────────────────────────────────────────────────────
 # Set up directories
 intermediate_dir <- here("data", "intermediate")
@@ -25,14 +27,17 @@ meta_cols <- c(
 # Load the characteristics files
 load_characteristics <- function(path) {
   df <- read_csv(path, show_col_types = FALSE)
-  df$participant_id <- toupper(trimws(df$participant_id))
+  df$participant_id <- normalize_participant_id(df$participant_id)
   df
 }
 
 # Load the dietary file
 load_dietary <- function(path) {
   df <- read_excel(path)
-  df$participant_id <- toupper(trimws(df[["Participant ID (ESHA ID)"]]))
+  df[["Participant ID (ESHA ID)"]] <- normalize_participant_id(
+    df[["Participant ID (ESHA ID)"]]
+  )
+  df$participant_id <- df[["Participant ID (ESHA ID)"]]
   # Coerce any character columns that should be numeric (e.g. "--" for missing)
   df <- df |>
     mutate(across(
@@ -54,7 +59,7 @@ pivot_taxa <- function(taxa_long, prefix) {
   taxa_long |>
     mutate(
       across(all_of(taxon_col), \(x) paste0(prefix, x)),
-      Participant_ID = toupper(trimws(Participant_ID))
+      Participant_ID = normalize_participant_id(Participant_ID)
     ) |>
     pivot_wider(
       id_cols     = all_of(meta_cols),
@@ -107,8 +112,6 @@ taxa_wide <- pivot_taxa(taxa_list[["phylum"]], "p__") |>
   left_join(pivot_taxa(taxa_list[["species"]], "s__"), by = meta_cols)
 
 # ── Match diagnostics (mycobiome as limiting dataset) ─────────────────────
-
-chars$participant_id <- gsub("_(\\d)$", "_0\\1", chars$participant_id)
 
 myco_ids <- unique(taxa_wide$Participant_ID)
 char_ids <- unique(chars$participant_id)
