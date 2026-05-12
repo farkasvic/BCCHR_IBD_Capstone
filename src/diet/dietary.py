@@ -2,8 +2,12 @@ import pandas as pd
 
 from pathlib import Path
 
-data_path = Path(__file__).parent.parent / "data" / "OPT_dietary data(ALL).csv"
-df = pd.read_csv(data_path, encoding="cp1252")
+
+project_root = Path(__file__).parent.parent.parent
+
+data_path = project_root / "data" / "raw" / "OPT_dietary data(ALL).csv"
+
+df = pd.read_csv(data_path, encoding="utf-8-sig")
 
 # Remove rows with missing caloric intake
 df = df[df["Cals (kcal)"].notna()]
@@ -18,6 +22,7 @@ df = df[
 
 #  Forward-fill identifiers
 # Participant ID and Timepoint are only listed once per block; propagate downward
+
 df["Participant ID (ESHA ID)"] = df["Participant ID (ESHA ID)"].ffill()
 df["Timepoint "] = df["Timepoint "].ffill()
 
@@ -49,7 +54,7 @@ for col in numerical_cols:
 # df.to_csv(output_path, index=False)
 
 output_path = (
-    Path(__file__).parent.parent / "data" / "processed" / "dietary_cleaned.xlsx"
+    Path(__file__).parent.parent.parent / "data" / "processed" / "dietary_cleaned.xlsx"
 )
 
 quartile_cols = [col for col in df.columns if col.endswith("_quartile")]
@@ -60,3 +65,4 @@ with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
     df[main_cols[:2] + quartile_cols].to_excel(
         writer, sheet_name="Quartiles", index=False
     )
+
