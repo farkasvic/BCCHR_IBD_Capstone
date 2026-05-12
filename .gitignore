@@ -70,13 +70,14 @@ renv/staging/
 # *.jpeg
 # *.tiff
 
-# Processed outputs
-data/intermediate/*
+# Data directories: commit layout (.gitkeep) only, not data files
+data/raw/**
+!data/raw/.gitkeep
+data/intermediate/**
 !data/intermediate/.gitkeep
-data/processed/*.csv
-data/processed/*.rds
-data/processed/*.xlsx
+data/processed/**
 !data/processed/.gitkeep
+
 figures/mycobiome/*
 !figures/mycobiome/.gitkeep
 

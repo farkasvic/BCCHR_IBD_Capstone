@@ -7,6 +7,7 @@ suppressPackageStartupMessages({
   library(tidyr)
 })
 
+source("src/participant_id.R")
 source("src/mycobiome/00_functions.R")
 
 
@@ -26,22 +27,26 @@ meta_data <- meta_raw |>
   ) |>
   distinct() |>
   mutate(
-    Participant_ID = gsub("_(\\d)$", "_0\\1", toupper(trimws(Participant_ID)))
+    Participant_ID = normalize_participant_id(Participant_ID)
   )
 
-# Confirm any IDs were normalised
-raw_ids <- unique(toupper(trimws(
-  rename(meta_raw, Participant_ID = `Participant ID`)$Participant_ID
-)))
-fixed_ids <- unique(meta_data$Participant_ID)
-changed <- setdiff(
-  gsub("_(\\d)$", "_0\\1", raw_ids), raw_ids
-) |> intersect(fixed_ids)
-if (length(changed)) {
-  cat("Participant IDs normalised to two-digit suffix:\n")
-  print(changed)
+# Confirm any IDs were normalised (compare raw xlsx to normalized values)
+raw_xlsx <- "data/raw/OPT_MBI sample IDs meta.xlsx"
+if (requireNamespace("readxl", quietly = TRUE) && file.exists(raw_xlsx)) {
+  raw_tab <- readxl::read_excel(raw_xlsx)
+  raw_ids <- unique(
+    toupper(trimws(as.character(raw_tab[["Participant ID"]])))
+  )
+  norm_ids <- normalize_participant_id(raw_ids)
+  changed_idx <- !is.na(raw_ids) & !is.na(norm_ids) & norm_ids != raw_ids
+  if (any(changed_idx)) {
+    cat("Participant IDs normalised to PREFIX_NN (two-digit suffix):\n")
+    print(unique(paste0(raw_ids[changed_idx], " -> ", norm_ids[changed_idx])))
+  } else {
+    cat("All Participant IDs already use two-digit suffix (raw xlsx).\n")
+  }
 } else {
-  cat("All Participant IDs already use two-digit suffix.\n")
+  cat("(Skipped raw-vs-normalized ID message: readxl or raw meta xlsx missing.)\n")
 }
 
 
