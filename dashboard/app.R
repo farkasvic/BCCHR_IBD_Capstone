@@ -5,14 +5,20 @@ library(dplyr)
 library(tidyr)
 library(readxl)
 
-# Separate diet, species, and genus datasets
+# Separate diet and taxa datasets and remove taxa tags from column names
 diet <- read_excel("../data/processed/dietary_cleaned.xlsx")
 
-genus <- read.csv("../data/processed/genus.csv")
-names(genus) <- sub("^g__", "", names(genus))
+phylum <- read.csv("../data/processed/phylum.csv")
+names(phylum) <- sub("^p__", "", names(phylum))
+
+family <- read.csv("../data/processed/family.csv")
+names(family) <- sub("^f__", "", names(family))
 
 species <- read.csv("../data/processed/species.csv")
 names(species) <- sub("^s__", "", names(species))
+
+genus <- read.csv("../data/processed/genus.csv")
+names(genus) <- sub("^g__", "", names(genus))
 
 # merged characteristics_genus_species_dietary_inner.csv from processed file
 participant_data <- read.csv(
@@ -139,8 +145,8 @@ ui <- navbarPage(
                radioButtons(
                  "taxa_level",
                  "Taxonomic Level",
-                 choices = c("Species", "Genus"),
-                 selected = "Species"
+                 choices = c("Phylum", "Family", "Species", "Genus"),
+                 selected = "Phylum"
                ),
                
                # Toggle between IBD/Non-IBD groups
@@ -165,14 +171,14 @@ ui <- navbarPage(
                    width = 6,
                    wellPanel(
                      h4("Population Summary"),
-                     verbatimTextOutput("population_summary")
+                     uiOutput("population_summary")
                    )
                  ),
                  column(
                    width = 6,
                    wellPanel(
                      h4("Dietary Summary"),
-                     verbatimTextOutput("diet_summary_table")
+                     uiOutput("diet_summary")
                    )
                  ),
                  column(
@@ -382,16 +388,20 @@ server <- function(input, output, session) {
   # Population Logic
   # -----------------------------
   
-  # Select data based on user choice
+  # Select taxa data based on user choice
   selected_data <- reactive({
-    if (input$taxa_level == "Species") {
+    if (input$taxa_level == "Phylum") {
+      phylum
+    } else if (input$taxa_level == "Family") {
+      family
+    } else if (input$taxa_level == "Species") {
       species
     } else {
       genus
     }
   })
   
-  # Filter by study group
+  # Filter selected data by study group
   filtered_data <- reactive({
     data <- selected_data()
     
@@ -400,25 +410,16 @@ server <- function(input, output, session) {
   })
   
   # Data summary
-  output$population_summary <- renderPrint({
+  output$population_summary <- renderUI({
     
     data <- filtered_data()
     
-    # Count taxa columns (4 is the number of non-taxa columns)
-    n_taxa <- ncol(data) - 4
-    
-    # Count samples
-    n_samples <- nrow(data)
-    
-    cat(
-      "Population Summary\n",
-      "-------------------\n",
-      "Taxonomic Level:", input$taxa_level, "\n",
-      "Group:", input$group_filter, "\n",
-      "Number of Samples:", n_samples, "\n",
-      "Number of Taxa:", n_taxa, "\n"
+    tagList(
+      tags$p(tags$b("Taxonomic Level: "), input$taxa_level),
+      tags$p(tags$b("Group: "), input$group_filter),
+      tags$p(tags$b("Number of Samples: "), nrow(data)),
+      tags$p(tags$b("Number of Taxa: "), ncol(data) - 4) # 4 is the number of non-taxa columns
     )
-    
   })
   
   # Filter by study group
@@ -428,7 +429,7 @@ server <- function(input, output, session) {
   })
   
   # Dietary Summary
-  output$diet_summary_table <- renderPrint({
+  output$diet_summary <- renderUI({
     
     data <- participants_filtered()
     
@@ -436,10 +437,10 @@ server <- function(input, output, session) {
     mean_protein <- round(mean(data$Prot..g., na.rm = TRUE), 1)
     mean_carbs <- round(mean(data$Carb..g., na.rm = TRUE), 1)
     
-    cat(
-      "Mean Calories:", mean_cals, "\n",
-      "Mean Protein:", mean_protein, "\n",
-      "Mean Carbohydrates:", mean_carbs, "\n"
+    tagList(
+      tags$p(tags$b("Mean Calories: "), mean_cals),
+      tags$p(tags$b("Mean Protein: "), mean_protein),
+      tags$p(tags$b("Mean Carbohydrates: "), mean_carbs)
     )
   })
   
