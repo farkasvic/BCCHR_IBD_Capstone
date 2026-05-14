@@ -28,6 +28,7 @@ Categorical-by-continuous comparisons?
 Candidate fungal features in literature: *Candida albicans*, *Saccharomyces cerevisiae*, *Saccharomyces*, *Candida*, and the Basidiomycota:Ascomycota ratio.
 
 ```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.height = 5)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -159,7 +160,15 @@ check <- distinct(merged, Sample_ID, Participant_ID, Study_group_new)
 plot_scatter <- function(df, x_col, y_col, x_label = x_col, y_label = y_col) {
   # Filter
   plot_data <- df |> filter(!is.na(.data[[x_col]]), !is.na(.data[[y_col]]))
- 
+
+  # Overall linear model stats for the smooth line
+  fit   <- lm(plot_data[[y_col]] ~ plot_data[[x_col]])
+  fs    <- summary(fit)
+  r2    <- fs$r.squared
+  pval  <- coef(fs)[2, "Pr(>|t|)"]
+  plab  <- if (pval < 0.001) "p < 0.001" else paste0("p = ", signif(pval, 2))
+  sub   <- paste0("Overall linear fit: R² = ", round(r2, 3), ", ", plab)
+
   # Plot
   p <- plot_data |>
     ggplot(aes(
@@ -179,7 +188,13 @@ plot_scatter <- function(df, x_col, y_col, x_label = x_col, y_label = y_col) {
     labs(x = x_label, y = y_label) +
     theme_minimal()
 
-  ggplotly(p, tooltip = "text")
+  ggplotly(p, tooltip = "text") |>
+    layout(
+      height = 500,
+      margin = list(t = 80, b = 150),
+      title  = list(text = paste0(x_label, " × ", y_label,
+                                  "<br><sup>", sub, "</sup>"))
+    )
 }
 ```
 
@@ -204,7 +219,6 @@ plot_scatter(scatter_df, "Tryptophan (g)", "Shannon",
 
 ```{r}
 unique(scatter_df$`Artificial sweeteners (mg)`)
-unique(scatter_df$ratio_basidio_asco)
 ```
 
 ```{r scatter-artsw-albicans}
