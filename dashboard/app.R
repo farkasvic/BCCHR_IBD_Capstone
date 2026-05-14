@@ -138,10 +138,12 @@ ui <- navbarPage(
   # -----------------------------
   tabPanel("Population",
            sidebarLayout(
+             
+             # Population control panel
              sidebarPanel(
                h4("Population Controls"),
                
-               # Toggle between species and genus data
+               # Toggle between taxa data
                radioButtons(
                  "taxa_level",
                  "Taxonomic Level",
@@ -167,6 +169,8 @@ ui <- navbarPage(
              ),
              mainPanel(
                fluidRow(
+                 
+                 # Population summary statistics
                  column(
                    width = 6,
                    wellPanel(
@@ -174,6 +178,8 @@ ui <- navbarPage(
                      uiOutput("population_summary")
                    )
                  ),
+                 
+                 # Population dietary statistics
                  column(
                    width = 6,
                    wellPanel(
@@ -181,11 +187,38 @@ ui <- navbarPage(
                      uiOutput("diet_summary")
                    )
                  ),
+                 
+                 # Fungal abundance plot
                  column(
                    width = 12,
                    wellPanel(
                      h4("Normalized Population Abundance"),
                      plotOutput("population_plot", height = "600px")
+                   )
+                 ),
+                 
+                 # Diet comparison plot
+                 column(
+                   width = 12,
+                   wellPanel(
+                     h4("Diet Comparison"),
+                     selectInput(
+                       "diet_variable",
+                       "Select Dietary Measure",
+                       choices = c(
+                         "Calories" = "Cals..kcal.",
+                         "Protein" = "Prot..g.",
+                         "Carbohydrates" = "Carb..g.",
+                         "Sugar" = "Sugar..g.",
+                         "Saturated Fat" = "SatFat..g.",
+                         "Monounsaturated Fat" = "MonoFat..g.",
+                         "Polyunsaturated Fat" = "PolyFat..g.",
+                         "Trans Fat" = "TransFat..g.",
+                         "Fiber" = "TotFib..g."
+                       ),
+                       selected = "cals_kcal"
+                     ),
+                     plotOutput("diet_plot", height = "600px")
                    )
                  )
                )
@@ -436,12 +469,63 @@ server <- function(input, output, session) {
     mean_cals <- round(mean(data$Cals..kcal., na.rm = TRUE), 1)
     mean_protein <- round(mean(data$Prot..g., na.rm = TRUE), 1)
     mean_carbs <- round(mean(data$Carb..g., na.rm = TRUE), 1)
+    mean_sugar <- round(mean(data$Sugar..g., na.rm = TRUE), 1)
+    mean_satfat <- round(mean(data$SatFat..g., na.rm = TRUE), 1)
+    mean_monofat <- round(mean(data$MonoFat..g., na.rm = TRUE), 1)
+    mean_polyfat <- round(mean(data$PolyFat..g., na.rm = TRUE), 1)
+    mean_transfat <- round(mean(data$TransFat..g., na.rm = TRUE), 1)
+    mean_fiber <- round(mean(data$TotFib..g., na.rm = TRUE), 1)
     
     tagList(
       tags$p(tags$b("Mean Calories: "), mean_cals),
       tags$p(tags$b("Mean Protein: "), mean_protein),
-      tags$p(tags$b("Mean Carbohydrates: "), mean_carbs)
+      tags$p(tags$b("Mean Carbohydrates: "), mean_carbs),
+      tags$p(tags$b("Mean Sugar: "), mean_sugar),
+      tags$p(tags$b("Mean Saturated Fat: "), mean_satfat),
+      tags$p(tags$b("Mean Monounsaturated Fat: "), mean_monofat),
+      tags$p(tags$b("Mean Polyunsaturated Fat: "), mean_polyfat),
+      tags$p(tags$b("Mean Trans Fat: "), mean_transfat),
+      tags$p(tags$b("Mean Fiber: "), mean_fiber)
     )
+  })
+  
+  # Create group diet comp plot
+  output$diet_plot <- renderPlot({
+    
+    # 
+    summary_data <- participant_data |>
+      group_by(Study_group_new) |>
+      summarise(
+        MeanValue = mean(
+          .data[[input$diet_variable]],
+          na.rm = TRUE
+        )
+      )
+    
+    # Plot
+    ggplot(
+      summary_data,
+      aes(
+        x = Study_group_new,
+        y = MeanValue,
+        fill = Study_group_new
+      )
+    ) +
+      geom_col(width = 0.7) +
+      labs(
+        title = paste(
+          "Mean",
+          input$diet_variable,
+          "Intake by Study Group"
+        ),
+        x = "Study Group",
+        y = "Mean Intake"
+      ) +
+      theme_minimal() +
+      theme(
+        legend.position = "none",
+        axis.text.x = element_text(angle = 20, hjust = 1)
+      )
   })
   
   # Create abundance plot
