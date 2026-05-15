@@ -1,17 +1,25 @@
 # imports
-import pandas as pd
-import numpy as np
+from pathlib import Path
+
 import country_converter as coco
+import numpy as np
+import pandas as pd
 from pandas.api.types import CategoricalDtype
-import os
 
 
 def main():
-    # read in data
-    # change file path according to personal data path
-    participant_char = pd.read_csv(
-        "/Users/victoriafarkas/Desktop/Capstone/temp_mds_capstone/data/raw/OPT_Participant Characteristics(Sheet1).csv"
+    project_root = Path(__file__).resolve().parents[2]
+    raw_path = (
+        project_root / "data" / "raw" / "OPT_Participant Characteristics(Sheet1).csv"
     )
+
+    if not raw_path.exists():
+        raise FileNotFoundError(
+            f"Raw characteristics file not found at {raw_path}. "
+            "Place OPT_Participant Characteristics(Sheet1).csv in data/raw."
+        )
+
+    participant_char = pd.read_csv(raw_path)
 
     # Resolve non-breaking space issue
     participant_char = participant_char.rename(
@@ -552,11 +560,12 @@ def main():
     )
 
     # Save to CSV
-    output_filename = "cleaned_characteristics.csv"
-    save_path = f"data/processed/{output_filename}"
-    os.makedirs("data/processed", exist_ok=True)
-    participant_char.to_csv(save_path, index=False)
-    print(f"Pipeline executed successfully. Cleaned data saved to '{save_path}'.")
+    output_path = project_root / "data" / "processed" / "cleaned_characteristics.csv"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    participant_char.to_csv(output_path, index=False)
+    print(
+        f"Pipeline executed successfully. Cleaned data saved to '{output_path}'."
+    )
 
 
 if __name__ == "__main__":
