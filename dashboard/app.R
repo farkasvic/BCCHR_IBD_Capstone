@@ -5,42 +5,82 @@ library(dplyr)
 library(tidyr)
 library(readxl)
 
-# Separate diet and taxa datasets and remove taxa tags from column names
-diet <- read_excel("../data/processed/dietary_cleaned.xlsx")
+get_script_dir <- function() {
+  cmd_args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- grep("^--file=", cmd_args, value = TRUE)
+  if (length(file_arg) > 0) {
+    return(dirname(normalizePath(sub("^--file=", "", file_arg[1]))))
+  }
 
-phylum <- read.csv("../data/processed/phylum.csv")
+  frame_file <- sys.frames()[[1]]$ofile
+  if (!is.null(frame_file)) {
+    return(dirname(normalizePath(frame_file)))
+  }
+
+  normalizePath(".")
+}
+
+app_dir <- get_script_dir()
+processed_dir <- file.path(app_dir, "..", "data", "processed")
+
+# Separate diet and taxa datasets and remove taxa tags from column names
+diet <- read_excel(file.path(processed_dir, "dietary_cleaned.xlsx"))
+
+phylum <- read.csv(file.path(processed_dir, "phylum.csv"))
 names(phylum) <- sub("^p__", "", names(phylum))
 
-family <- read.csv("../data/processed/family.csv")
+family <- read.csv(file.path(processed_dir, "family.csv"))
 names(family) <- sub("^f__", "", names(family))
 
-species <- read.csv("../data/processed/species.csv")
+species <- read.csv(file.path(processed_dir, "species.csv"))
 names(species) <- sub("^s__", "", names(species))
 
-genus <- read.csv("../data/processed/genus.csv")
+genus <- read.csv(file.path(processed_dir, "genus.csv"))
 names(genus) <- sub("^g__", "", names(genus))
 
-# merged characteristics_genus_species_dietary_inner.csv from processed file
+# merged participant-level data from processed file
 participant_data <- read.csv(
-  "../data/processed/characteristics_genus_species_dietary_inner.csv",
+  file.path(processed_dir, "merged.csv"),
   stringsAsFactors = FALSE
 )
 
+coalesce_col <- function(df, candidates, target) {
+  hit <- candidates[candidates %in% names(df)]
+  if (length(hit) == 0) {
+    stop(
+      sprintf(
+        "None of the expected columns for '%s' were found. Tried: %s",
+        target,
+        paste(candidates, collapse = ", ")
+      )
+    )
+  }
+  names(df)[names(df) == hit[1]] <- target
+  df
+}
+
+participant_data <- participant_data |>
+  coalesce_col(c("Participant_ID", "participant_id"), "Participant_ID") |>
+  coalesce_col(c("weight_.lbs.", "weight..lbs.", "weight_(lbs)"), "Weight_lbs_src") |>
+  coalesce_col(c("height_.cm.", "height..cm.", "height_(cm)"), "Height_cm_src")
+
 participants <- participant_data %>%
   transmute(
-    ID = participant_id,
+    ID = Participant_ID,
     Age = age,
     Sex = gender,
     Ethnicity = ethnicity,
     Country_of_Origin = country_of_origin,
     Years_Living_in_Canada = years_living_in_canada,
-    Weight_lbs = weight_.lbs.,
-    Height_cm = height_.cm.,
+    Weight_lbs = Weight_lbs_src,
+    Height_cm = Height_cm_src,
     Exercise_History = exercise_history,
     Comorbidities = comorbidities,
     Family_History_of_IBD = family_history_of_ibd,
     Smoking_Status = smoking_status,
-    Alcohol_Intake = alcohol_intake
+    Alcohol_Intake = alcohol_intake,
+    Prebiotics = supp_prebiotics,
+    Probiotics = probiotics
   ) %>%
   distinct(ID, .keep_all = TRUE)
 
@@ -249,6 +289,37 @@ server <- function(input, output, session) {
     "TotFib..g." = 28.0
   )
 
+  format_binary_usage <- function(value) {
+    if (is.na(value) || value == "") {
+      return("NA")
+    }
+
+    numeric_value <- suppressWarnings(as.numeric(value))
+    if (!is.na(numeric_value)) {
+      return(ifelse(numeric_value == 1, "Yes", "No"))
+    }
+
+    value
+  }
+
+  fibre_target_for_sex <- function(sex_value) {
+    normalized_sex <- tolower(trimws(as.character(sex_value)))
+
+    if (is.na(normalized_sex) || normalized_sex == "") {
+      return(NA_real_)
+    }
+
+    if (normalized_sex == "female") {
+      return(25.0)
+    }
+
+    if (normalized_sex == "male") {
+      return(38.0)
+    }
+
+    NA_real_
+  }
+
   # -----------------------------
   # Individual Logic
   # -----------------------------
@@ -275,7 +346,9 @@ server <- function(input, output, session) {
       tags$p(tags$b("Comorbidities: "), result$Comorbidities[1]),
       tags$p(tags$b("Family History of IBD: "), result$Family_History_of_IBD[1]),
       tags$p(tags$b("Smoking Status: "), result$Smoking_Status[1]),
-      tags$p(tags$b("Alcohol Intake: "), result$Alcohol_Intake[1])
+      tags$p(tags$b("Alcohol Intake: "), result$Alcohol_Intake[1]),
+      tags$p(tags$b("On Prebiotics: "), format_binary_usage(result$Prebiotics[1])),
+      tags$p(tags$b("On Probiotics: "), format_binary_usage(result$Probiotics[1]))
     )
   })
   output$microbiome_pie <- renderPlotly({
@@ -351,19 +424,22 @@ server <- function(input, output, session) {
     
     selected_id <- toupper(trimws(input$search_id))
     selected_rows <- participant_data %>%
-      filter(toupper(participant_id) == selected_id)
+      filter(toupper(Participant_ID) == selected_id)
     
     validate(need(nrow(selected_rows) > 0, "No participant found."))
     
     participant_summary <- selected_rows %>%
       mutate(across(all_of(score_columns), ~ as.numeric(.x))) %>%
       summarise(across(all_of(score_columns), ~ mean(.x, na.rm = TRUE)))
-    
+
+    cfg_targets_individual <- cfg_targets
+    cfg_targets_individual["TotFib..g."] <- fibre_target_for_sex(selected_rows$gender[1])
+
     intake_values <- unlist(participant_summary[1, score_columns], use.names = FALSE)
     names(intake_values) <- score_columns
-    pct_reached <- round((intake_values / cfg_targets[score_columns]) * 100, 0)
+    pct_reached <- round((intake_values / cfg_targets_individual[score_columns]) * 100, 0)
     pct_reached[!is.finite(pct_reached)] <- NA
-    met_target <- intake_values >= cfg_targets[score_columns]
+    met_target <- intake_values >= cfg_targets_individual[score_columns]
     summary_score <- sum(met_target, na.rm = TRUE)
     
     display_names <- c(
@@ -383,7 +459,7 @@ server <- function(input, output, session) {
       tags$tr(
         tags$td(display_names[col], style = "padding:6px 10px;"),
         tags$td(sprintf("%.2f", intake_values[col]), style = "padding:6px 10px; text-align:right;"),
-        tags$td(sprintf("%.2f", cfg_targets[col]), style = "padding:6px 10px; text-align:right;"),
+        tags$td(sprintf("%.2f", cfg_targets_individual[col]), style = "padding:6px 10px; text-align:right;"),
         tags$td(
           ifelse(is.na(pct_reached[col]), "NA", paste0(pct_reached[col], "%")),
           style = "padding:6px 10px; text-align:right;"
