@@ -11,9 +11,10 @@ PY_ENV := bcchrcapstone
 PY_ENV_FILE := environment.yaml
 PY_SRC := src
 R_SRC := src
+DASH := dashboard
 MYCO_SRC := src/mycobiome
 
-.PHONY: help setup snapshot renv-status renv-clean python-env python-prune python-check r-check process all clean import wrangle diversity diversity-stats abundance heatmap save
+.PHONY: help setup snapshot renv-status renv-clean python-env python-prune python-check r-check process all clean import wrangle diversity diversity-stats abundance heatmap save merge normalize-ids app
 
 help:
 	@printf "%b\n" "$(CYAN)Available commands:$(RESET)"
@@ -44,6 +45,13 @@ help:
 	@printf "%b\n" "  $(YELLOW)make save$(RESET)        - Save processed datasets and combined taxa table"
 	@printf "%b\n" "  $(YELLOW)make clean$(RESET)       - Remove intermediate and generated files"
 	@printf "%b\n" "  $(YELLOW)make ALL$(RESET)         - Run the full data processing pipeline (no stats)"
+	@printf "%b\n" ""
+	@printf "%b\n" "$(CYAN)Domain Relationships:$(RESET)"
+	@printf "%b\n" "  $(YELLOW)make merge$(RESET)       - Merge domain datasets into combined output"
+	@printf "%b\n" "  $(YELLOW)make normalize-ids$(RESET) - Audit participant IDs and write normalized meta CSV"
+	@printf "%b\n" ""
+	@printf "%b\n" "$(CYAN)Launch App:$(RESET)"
+	@printf "%b\n" "  $(YELLOW)make app$(RESET)         - Launch the Shiny dashboard"
 
 setup:
 	@printf "%b\n" "$(CYAN)Restoring renv environment from renv.lock...$(RESET)"
@@ -139,3 +147,17 @@ save:
 	@printf "%b\n" "$(CYAN)Saving processed outputs...$(RESET)"
 	Rscript $(MYCO_SRC)/06_save_processed.R
 	@printf "%b\n" "$(GREEN)Save complete.$(RESET)"
+
+merge:
+	@printf "%b\n" "$(CYAN)Merging domain datasets...$(RESET)"
+	Rscript $(R_SRC)/merge_files.R
+	@printf "%b\n" "$(GREEN)Merge complete.$(RESET)"
+
+normalize-ids:
+	@printf "%b\n" "$(CYAN)Auditing and normalizing participant IDs...$(RESET)"
+	Rscript scripts/normalize_participant_ids.R
+	@printf "%b\n" "$(GREEN)Participant ID audit complete.$(RESET)"
+
+app:
+	@printf "%b\n" "$(CYAN)Launching Shiny dashboard...$(RESET)"
+	Rscript $(DASH)/app.R
