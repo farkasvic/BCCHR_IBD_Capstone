@@ -69,8 +69,8 @@ ui <- navbarPage(
                radioButtons(
                  "individual_taxa_level",
                  "Taxonomic Level",
-                 choices = c("Species", "Genus"),
-                 selected = "Genus"
+                 choices = c("Phylum", "Family", "Species", "Genus"),
+                 selected = "Phylum"
                 )
                   ),
             # 5 boxes in the main panel
@@ -278,11 +278,26 @@ server <- function(input, output, session) {
       tags$p(tags$b("Alcohol Intake: "), result$Alcohol_Intake[1])
     )
   })
+  
+  selected_taxa <- reactive({
+    if (input$individual_taxa_level == "Phylum") {
+      phylum
+    } else if (input$individual_taxa_level == "Family") {
+      family
+    } else if (input$individual_taxa_level == "Species") {
+      species
+    } else {
+      genus
+    }
+  })
   output$microbiome_pie <- renderPlotly({
     req(input$search_id)
     selected_id <- toupper(trimws(input$search_id))
     
-    microbiome_data <- if (input$individual_taxa_level == "Species") species else genus
+    microbiome_data <- selected_taxa()
+      
+    # if (input$individual_taxa_level == "Species") species else genus
+    
     taxon_cols <- setdiff(
       names(microbiome_data),
       c("Sample_ID", "Participant_ID", "Sample_type", "Study_group_new", "Fiber_restriction")
@@ -466,6 +481,7 @@ server <- function(input, output, session) {
     
     data <- participants_filtered()
     
+    # Calculate mean diet measurements for filtered data
     mean_cals <- round(mean(data$Cals..kcal., na.rm = TRUE), 1)
     mean_protein <- round(mean(data$Prot..g., na.rm = TRUE), 1)
     mean_carbs <- round(mean(data$Carb..g., na.rm = TRUE), 1)
@@ -476,6 +492,7 @@ server <- function(input, output, session) {
     mean_transfat <- round(mean(data$TransFat..g., na.rm = TRUE), 1)
     mean_fiber <- round(mean(data$TotFib..g., na.rm = TRUE), 1)
     
+    # Display mean diet measurements
     tagList(
       tags$p(tags$b("Mean Calories: "), mean_cals),
       tags$p(tags$b("Mean Protein: "), mean_protein),
