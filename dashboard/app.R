@@ -40,7 +40,9 @@ participants <- participant_data %>%
     Comorbidities = comorbidities,
     Family_History_of_IBD = family_history_of_ibd,
     Smoking_Status = smoking_status,
-    Alcohol_Intake = alcohol_intake
+    Alcohol_Intake = alcohol_intake,
+    Prebiotics = supp_prebiotics,
+    Probiotics = probiotics
   ) %>%
   distinct(ID, .keep_all = TRUE)
 
@@ -245,9 +247,35 @@ server <- function(input, output, session) {
     "MPVeg..c.eq." = 2.5,
     "MPFruit..c.eq." = 2.0,
     "MPDairy..c.eq." = 2.0,
-    "MPProt..oz.eq." = 5.5,
-    "TotFib..g." = 28.0
+    "MPProt..oz.eq." = 5.5
   )
+
+  format_prevalence <- function(value) {
+    if (is.null(value) || length(value) == 0 || is.na(value)) {
+      return("NA")
+    }
+    if (value %in% c(1, "1")) {
+      return("Yes")
+    }
+    if (value %in% c(0, "0")) {
+      return("No")
+    }
+    as.character(value)
+  }
+
+  get_fibre_target <- function(sex_value) {
+    sex_clean <- ""
+    if (!is.null(sex_value) && length(sex_value) > 0 && !is.na(sex_value[1])) {
+      sex_clean <- tolower(trimws(as.character(sex_value[1])))
+    }
+    if (sex_clean %in% c("female", "woman", "f")) {
+      return(25.0)
+    }
+    if (sex_clean %in% c("male", "man", "m")) {
+      return(38.0)
+    }
+    NA_real_
+  }
 
   # -----------------------------
   # Individual Logic
@@ -275,7 +303,9 @@ server <- function(input, output, session) {
       tags$p(tags$b("Comorbidities: "), result$Comorbidities[1]),
       tags$p(tags$b("Family History of IBD: "), result$Family_History_of_IBD[1]),
       tags$p(tags$b("Smoking Status: "), result$Smoking_Status[1]),
-      tags$p(tags$b("Alcohol Intake: "), result$Alcohol_Intake[1])
+      tags$p(tags$b("Alcohol Intake: "), result$Alcohol_Intake[1]),
+      tags$p(tags$b("Prebiotics: "), format_prevalence(result$Prebiotics[1])),
+      tags$p(tags$b("Probiotics: "), format_prevalence(result$Probiotics[1]))
     )
   })
   output$microbiome_pie <- renderPlotly({
@@ -358,12 +388,18 @@ server <- function(input, output, session) {
     participant_summary <- selected_rows %>%
       mutate(across(all_of(score_columns), ~ as.numeric(.x))) %>%
       summarise(across(all_of(score_columns), ~ mean(.x, na.rm = TRUE)))
+
+    fibre_target <- get_fibre_target(selected_rows$gender[1])
+    participant_targets <- c(
+      cfg_targets,
+      "TotFib..g." = fibre_target
+    )
     
     intake_values <- unlist(participant_summary[1, score_columns], use.names = FALSE)
     names(intake_values) <- score_columns
-    pct_reached <- round((intake_values / cfg_targets[score_columns]) * 100, 0)
+    pct_reached <- round((intake_values / participant_targets[score_columns]) * 100, 0)
     pct_reached[!is.finite(pct_reached)] <- NA
-    met_target <- intake_values >= cfg_targets[score_columns]
+    met_target <- intake_values >= participant_targets[score_columns]
     summary_score <- sum(met_target, na.rm = TRUE)
     
     display_names <- c(
@@ -383,7 +419,10 @@ server <- function(input, output, session) {
       tags$tr(
         tags$td(display_names[col], style = "padding:6px 10px;"),
         tags$td(sprintf("%.2f", intake_values[col]), style = "padding:6px 10px; text-align:right;"),
-        tags$td(sprintf("%.2f", cfg_targets[col]), style = "padding:6px 10px; text-align:right;"),
+        tags$td(
+          ifelse(is.na(participant_targets[col]), "NA", sprintf("%.2f", participant_targets[col])),
+          style = "padding:6px 10px; text-align:right;"
+        ),
         tags$td(
           ifelse(is.na(pct_reached[col]), "NA", paste0(pct_reached[col], "%")),
           style = "padding:6px 10px; text-align:right;"
