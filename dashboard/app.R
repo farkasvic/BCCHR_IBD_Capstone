@@ -42,7 +42,50 @@ participants <- participant_data %>%
     Smoking_Status = smoking_status,
     Alcohol_Intake = alcohol_intake,
     Prebiotics = supp_prebiotics,
-    Probiotics = probiotics
+    Probiotics = probiotics,
+    Harvey_Bradshaw_Index = harvey_bradshaw_index,
+    General_Well_Being = general_well.being,
+    Abdominal_Pain = abdominal_pain,
+    Daily_Soft_Stools = daily_soft_stools,
+    Advanced_Therapy_Changes = advanced_therapy_changes,
+    Fatigue_Frequency = fatigue_frequency,
+    Anxiety_Frequency = anxiety_frequency,
+    Sleep_Difficulty_Frequency = sleep_difficulty_frequency,
+    Abdominal_Bloating_Frequency = abdominal_bloating_frequency,
+    Rectal_Bleeding_Frequency = rectal_bleeding_frequency,
+    Feeling_Unwell_Frequency = feeling_unwell_frequency,
+    Fruit_Avoidance_Active = fruit_avoidance_active,
+    Excluded_Fruits_Active = excluded_fruits_active,
+    Vegetable_Avoidance_Active = vegetable_avoidance_active,
+    Excluded_Vegetables_Active = excluded_vegetables_active,
+    Whole_Grain_Avoidance_Active = whole_grain_avoidance_active,
+    Excluded_Whole_Grains_Active = excluded_whole_grains_active,
+    Nut_Seed_Avoidance_Active = nut_seed_avoidance_active,
+    Excluded_Nuts_Seeds_Active = excluded_nuts_seeds_active,
+    Lactose_Avoidance_Active = lactose_avoidance_active,
+    Excluded_Lactose_Active = excluded_lactose_active,
+    Gluten_Avoidance_Active = gluten_avoidance_active,
+    Excluded_Gluten_Active = excluded_gluten_active,
+    Spicy_Food_Avoidance_Active = spicy_food_avoidance_active,
+    Excluded_Spicy_Foods_Active = excluded_spicy_foods_active,
+    Fat_Food_Avoidance_Active = fat_food_avoidance_active,
+    Excluded_Fat_Foods_Active = exclued_fat_foods_active,
+    Fruit_Avoidance_Remission = fruit_avoidance_rem,
+    Excluded_Fruits_Remission = excluded_fruits_rem,
+    Vegetable_Avoidance_Remission = vegetable_avoidance_rem,
+    Excluded_Vegetables_Remission = excluded_vegetables_rem,
+    Whole_Grain_Avoidance_Remission = whole_grain_avoidance_rem,
+    Excluded_Whole_Grains_Remission = excluded_whole_grains_rem,
+    Nut_Seed_Avoidance_Remission = nut_seed_avoidance_rem,
+    Excluded_Nuts_Seeds_Remission = excluded_nuts_seeds_rem,
+    Lactose_Avoidance_Remission = lactose_avoidance_rem,
+    Excluded_Lactose_Remission = excluded_lactose_rem,
+    Gluten_Avoidance_Remission = gluten_avoidance_rem,
+    Excluded_Gluten_Remission = excluded_gluten_rem,
+    Spicy_Food_Avoidance_Remission = spicy_food_avoidance_rem,
+    Excluded_Spicy_Foods_Remission = excluded_spicy_foods_rem,
+    Fat_Food_Avoidance_Remission = fat_food_avoidance_rem,
+    Excluded_Fat_Foods_Remission = excluded_fat_foods_rem
   ) %>%
   distinct(ID, .keep_all = TRUE)
 
@@ -53,6 +96,36 @@ genus_cols <- grep("^g__", names(participant_data), value = TRUE)
 # -----------------------------
 ui <- navbarPage(
   title = "IBD Dashboard",
+  header = tags$head(
+    tags$style(HTML("
+      .dashboard-card {
+        background: #ffffff;
+        border: 1px solid #d9e2ec;
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+      }
+      .dashboard-card h4 {
+        margin-top: 0;
+        margin-bottom: 14px;
+        font-weight: 600;
+      }
+      .control-sidebar {
+        padding-right: 10px;
+      }
+      .control-sidebar .dashboard-card {
+        position: sticky;
+        top: 20px;
+      }
+      .dashboard-row {
+        margin-bottom: 8px;
+      }
+      .dashboard-row:last-child {
+        margin-bottom: 0;
+      }
+    "))
+  ),
   
   # -----------------------------
   # Individual Page
@@ -60,30 +133,38 @@ ui <- navbarPage(
   tabPanel("Individual",
            sidebarLayout(
              sidebarPanel(
-              h4("Search Participant"),
-                selectizeInput(
-                  "search_id",
-                  "Enter participant ID",
-                  choices = sort(unique(participants$ID)),
-                  selected = NULL,
-                  options = list(placeholder = "e.g. OPT_18")
-                ),
-               radioButtons(
-                 "individual_taxa_level",
-                 "Taxonomic Level",
-                 choices = c("Species", "Genus"),
-                 selected = "Genus"
-                )
-                  ),
+               width = 2,
+               class = "control-sidebar",
+               div(
+                 class = "dashboard-card",
+                 h4("Search Participant"),
+                 selectizeInput(
+                   "search_id",
+                   "Enter participant ID",
+                   choices = sort(unique(participants$ID)),
+                   selected = NULL,
+                   options = list(placeholder = "e.g. OPT_18")
+                 ),
+                 radioButtons(
+                   "individual_taxa_level",
+                   "Taxonomic Level",
+                   choices = c("Species", "Genus"),
+                   selected = "Genus"
+                 )
+               )
+             ),
             # 5 boxes in the main panel
             mainPanel(
+              width = 10,
               
               fluidRow(
+                class = "dashboard-row",
                 
                 # Box 1
                 column(
                   width = 6,
-                  wellPanel(
+                  div(
+                    class = "dashboard-card",
                     h4("Participant Information"),
                     uiOutput("participant_info")
                   )
@@ -92,19 +173,22 @@ ui <- navbarPage(
                 # Box 2
                 column(
                   width = 6,
-                  wellPanel(
-                    h4("Mycobiome Composition"),
-                    plotlyOutput("microbiome_pie", height = "260px")
+                  div(
+                    class = "dashboard-card",
+                    h4("Disease Activity"),
+                    uiOutput("disease_activity_card")
                   )
                 )
               ),
               
               fluidRow(
+                class = "dashboard-row",
                 
                 # Box 3
                 column(
                   width = 6,
-                  wellPanel(
+                  div(
+                    class = "dashboard-card",
                     h4("Participant vs Canadian Food Guide"),
                     uiOutput("cfg_card")
                   )
@@ -113,21 +197,32 @@ ui <- navbarPage(
                 # Box 4
                 column(
                   width = 6,
-                  wellPanel(
-                    h4("Box 4"),
-                    p("Content goes here")
+                  div(
+                    class = "dashboard-card",
+                    h4("Symptom Burden"),
+                    uiOutput("symptom_burden_card")
                   )
                 )
               ),
               
               fluidRow(
+                class = "dashboard-row",
                 
                 # Box 5
                 column(
-                  width = 12,
-                  wellPanel(
-                    h4("Box 5"),
-                    p("Content goes here")
+                  width = 6,
+                  div(
+                    class = "dashboard-card",
+                    h4("Food Avoidance"),
+                    uiOutput("food_avoidance_card")
+                  )
+                ),
+                column(
+                  width = 6,
+                  div(
+                    class = "dashboard-card",
+                    h4("Mycobiome Composition"),
+                    plotlyOutput("microbiome_pie", height = "260px")
                   )
                 )
               )
@@ -277,6 +372,22 @@ server <- function(input, output, session) {
     NA_real_
   }
 
+  format_missing <- function(value) {
+    if (is.null(value) || length(value) == 0 || is.na(value) || trimws(as.character(value)) == "") {
+      return("NA")
+    }
+    as.character(value)
+  }
+
+  format_avoidance_detail <- function(summary_value, excluded_value) {
+    summary_text <- format_missing(summary_value)
+    excluded_text <- format_missing(excluded_value)
+    if (excluded_text == "NA" || identical(summary_text, "No avoidance")) {
+      return(summary_text)
+    }
+    paste0(summary_text, " (", excluded_text, ")")
+  }
+
   # -----------------------------
   # Individual Logic
   # -----------------------------
@@ -374,6 +485,98 @@ server <- function(input, output, session) {
           yanchor = "top"
         )
       )
+  })
+
+  output$disease_activity_card <- renderUI({
+    result <- participant_match()
+    if (nrow(result) == 0) {
+      return(tags$p("No participant found."))
+    }
+
+    tagList(
+      tags$p(tags$b("Harvey Bradshaw Index: "), format_missing(result$Harvey_Bradshaw_Index[1])),
+      tags$p(tags$b("General Well-Being: "), format_missing(result$General_Well_Being[1])),
+      tags$p(tags$b("Abdominal Pain: "), format_missing(result$Abdominal_Pain[1])),
+      tags$p(tags$b("Daily Soft Stools: "), format_missing(result$Daily_Soft_Stools[1])),
+      tags$p(tags$b("Advanced Therapy Changes: "), format_missing(result$Advanced_Therapy_Changes[1]))
+    )
+  })
+
+  output$symptom_burden_card <- renderUI({
+    result <- participant_match()
+    if (nrow(result) == 0) {
+      return(tags$p("No participant found."))
+    }
+
+    tagList(
+      tags$p(tags$b("Fatigue: "), format_missing(result$Fatigue_Frequency[1])),
+      tags$p(tags$b("Anxiety: "), format_missing(result$Anxiety_Frequency[1])),
+      tags$p(tags$b("Sleep Difficulty: "), format_missing(result$Sleep_Difficulty_Frequency[1])),
+      tags$p(tags$b("Abdominal Bloating: "), format_missing(result$Abdominal_Bloating_Frequency[1])),
+      tags$p(tags$b("Rectal Bleeding: "), format_missing(result$Rectal_Bleeding_Frequency[1])),
+      tags$p(tags$b("Feeling Unwell: "), format_missing(result$Feeling_Unwell_Frequency[1]))
+    )
+  })
+
+  output$food_avoidance_card <- renderUI({
+    result <- participant_match()
+    if (nrow(result) == 0) {
+      return(tags$p("No participant found."))
+    }
+
+    food_categories <- data.frame(
+      Category = c(
+        "Fruit",
+        "Vegetables",
+        "Whole grains",
+        "Nuts / seeds",
+        "Lactose",
+        "Gluten",
+        "Spicy foods",
+        "High-fat foods"
+      ),
+      Active = c(
+        format_avoidance_detail(result$Fruit_Avoidance_Active[1], result$Excluded_Fruits_Active[1]),
+        format_avoidance_detail(result$Vegetable_Avoidance_Active[1], result$Excluded_Vegetables_Active[1]),
+        format_avoidance_detail(result$Whole_Grain_Avoidance_Active[1], result$Excluded_Whole_Grains_Active[1]),
+        format_avoidance_detail(result$Nut_Seed_Avoidance_Active[1], result$Excluded_Nuts_Seeds_Active[1]),
+        format_avoidance_detail(result$Lactose_Avoidance_Active[1], result$Excluded_Lactose_Active[1]),
+        format_avoidance_detail(result$Gluten_Avoidance_Active[1], result$Excluded_Gluten_Active[1]),
+        format_avoidance_detail(result$Spicy_Food_Avoidance_Active[1], result$Excluded_Spicy_Foods_Active[1]),
+        format_avoidance_detail(result$Fat_Food_Avoidance_Active[1], result$Excluded_Fat_Foods_Active[1])
+      ),
+      Remission = c(
+        format_avoidance_detail(result$Fruit_Avoidance_Remission[1], result$Excluded_Fruits_Remission[1]),
+        format_avoidance_detail(result$Vegetable_Avoidance_Remission[1], result$Excluded_Vegetables_Remission[1]),
+        format_avoidance_detail(result$Whole_Grain_Avoidance_Remission[1], result$Excluded_Whole_Grains_Remission[1]),
+        format_avoidance_detail(result$Nut_Seed_Avoidance_Remission[1], result$Excluded_Nuts_Seeds_Remission[1]),
+        format_avoidance_detail(result$Lactose_Avoidance_Remission[1], result$Excluded_Lactose_Remission[1]),
+        format_avoidance_detail(result$Gluten_Avoidance_Remission[1], result$Excluded_Gluten_Remission[1]),
+        format_avoidance_detail(result$Spicy_Food_Avoidance_Remission[1], result$Excluded_Spicy_Foods_Remission[1]),
+        format_avoidance_detail(result$Fat_Food_Avoidance_Remission[1], result$Excluded_Fat_Foods_Remission[1])
+      ),
+      stringsAsFactors = FALSE
+    )
+
+    rows <- lapply(seq_len(nrow(food_categories)), function(i) {
+      tags$tr(
+        tags$td(food_categories$Category[i], style = "padding:6px 10px; vertical-align:top;"),
+        tags$td(food_categories$Active[i], style = "padding:6px 10px; vertical-align:top;"),
+        tags$td(food_categories$Remission[i], style = "padding:6px 10px; vertical-align:top;")
+      )
+    })
+
+    tags$table(
+      style = "width:100%; font-size:13px; border-collapse:collapse;",
+      tags$thead(
+        tags$tr(
+          tags$th("Category", style = "padding:6px 10px; text-align:left; border-bottom:1px solid #ddd;"),
+          tags$th("Active Disease", style = "padding:6px 10px; text-align:left; border-bottom:1px solid #ddd;"),
+          tags$th("Remission", style = "padding:6px 10px; text-align:left; border-bottom:1px solid #ddd;")
+        )
+      ),
+      tags$tbody(rows)
+    )
   })
   
   output$cfg_card <- renderUI({
