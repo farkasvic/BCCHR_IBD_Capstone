@@ -160,7 +160,6 @@ ui <- navbarPage(
               fluidRow(
                 class = "dashboard-row",
                 
-                # Box 1
                 column(
                   width = 6,
                   div(
@@ -169,14 +168,21 @@ ui <- navbarPage(
                     uiOutput("participant_info")
                   )
                 ),
-                
-                # Box 2
+
                 column(
-                  width = 6,
+                  width = 3,
                   div(
                     class = "dashboard-card",
                     h4("Disease Activity"),
                     uiOutput("disease_activity_card")
+                  )
+                ),
+                column(
+                  width = 3,
+                  div(
+                    class = "dashboard-card",
+                    h4("Symptom Burden"),
+                    uiOutput("symptom_burden_card")
                   )
                 )
               ),
@@ -193,14 +199,12 @@ ui <- navbarPage(
                     uiOutput("cfg_card")
                   )
                 ),
-                
-                # Box 4
                 column(
                   width = 6,
                   div(
                     class = "dashboard-card",
-                    h4("Symptom Burden"),
-                    uiOutput("symptom_burden_card")
+                    h4("Mycobiome Composition"),
+                    plotlyOutput("microbiome_pie", height = "260px")
                   )
                 )
               ),
@@ -208,21 +212,12 @@ ui <- navbarPage(
               fluidRow(
                 class = "dashboard-row",
                 
-                # Box 5
                 column(
-                  width = 6,
+                  width = 12,
                   div(
                     class = "dashboard-card",
                     h4("Food Avoidance"),
                     uiOutput("food_avoidance_card")
-                  )
-                ),
-                column(
-                  width = 6,
-                  div(
-                    class = "dashboard-card",
-                    h4("Mycobiome Composition"),
-                    plotlyOutput("microbiome_pie", height = "260px")
                   )
                 )
               )
@@ -402,21 +397,29 @@ server <- function(input, output, session) {
       return(tags$p("No participant found."))
     }
     tagList(
-      tags$p(tags$b("ID: "), result$ID[1]),
-      tags$p(tags$b("Age: "), result$Age[1]),
-      tags$p(tags$b("Sex: "), result$Sex[1]),
-      tags$p(tags$b("Ethnicity: "), result$Ethnicity[1]),
-      tags$p(tags$b("Country of Origin: "), result$Country_of_Origin[1]),
-      tags$p(tags$b("Years Living in Canada: "), result$Years_Living_in_Canada[1]),
-      tags$p(tags$b("Weight (lbs): "), result$Weight_lbs[1]),
-      tags$p(tags$b("Height (cm): "), result$Height_cm[1]),
-      tags$p(tags$b("Exercise History: "), result$Exercise_History[1]),
-      tags$p(tags$b("Comorbidities: "), result$Comorbidities[1]),
-      tags$p(tags$b("Family History of IBD: "), result$Family_History_of_IBD[1]),
-      tags$p(tags$b("Smoking Status: "), result$Smoking_Status[1]),
-      tags$p(tags$b("Alcohol Intake: "), result$Alcohol_Intake[1]),
-      tags$p(tags$b("Prebiotics: "), format_prevalence(result$Prebiotics[1])),
-      tags$p(tags$b("Probiotics: "), format_prevalence(result$Probiotics[1]))
+      fluidRow(
+        column(
+          width = 6,
+          tags$p(tags$b("ID: "), result$ID[1]),
+          tags$p(tags$b("Age: "), result$Age[1]),
+          tags$p(tags$b("Sex: "), result$Sex[1]),
+          tags$p(tags$b("Ethnicity: "), result$Ethnicity[1]),
+          tags$p(tags$b("Country of Origin: "), result$Country_of_Origin[1]),
+          tags$p(tags$b("Years Living in Canada: "), result$Years_Living_in_Canada[1]),
+          tags$p(tags$b("Weight (lbs): "), result$Weight_lbs[1])
+        ),
+        column(
+          width = 6,
+          tags$p(tags$b("Height (cm): "), result$Height_cm[1]),
+          tags$p(tags$b("Exercise History: "), result$Exercise_History[1]),
+          tags$p(tags$b("Comorbidities: "), result$Comorbidities[1]),
+          tags$p(tags$b("Family History of IBD: "), result$Family_History_of_IBD[1]),
+          tags$p(tags$b("Smoking Status: "), result$Smoking_Status[1]),
+          tags$p(tags$b("Alcohol Intake: "), result$Alcohol_Intake[1]),
+          tags$p(tags$b("Prebiotics: "), format_prevalence(result$Prebiotics[1])),
+          tags$p(tags$b("Probiotics: "), format_prevalence(result$Probiotics[1]))
+        )
+      )
     )
   })
   output$microbiome_pie <- renderPlotly({
@@ -592,6 +595,10 @@ server <- function(input, output, session) {
       mutate(across(all_of(score_columns), ~ as.numeric(.x))) %>%
       summarise(across(all_of(score_columns), ~ mean(.x, na.rm = TRUE)))
 
+    cohort_summary <- participant_data %>%
+      mutate(across(all_of(score_columns), ~ as.numeric(.x))) %>%
+      summarise(across(all_of(score_columns), ~ mean(.x, na.rm = TRUE)))
+
     fibre_target <- get_fibre_target(selected_rows$gender[1])
     participant_targets <- c(
       cfg_targets,
@@ -600,6 +607,8 @@ server <- function(input, output, session) {
     
     intake_values <- unlist(participant_summary[1, score_columns], use.names = FALSE)
     names(intake_values) <- score_columns
+    cohort_average_values <- unlist(cohort_summary[1, score_columns], use.names = FALSE)
+    names(cohort_average_values) <- score_columns
     pct_reached <- round((intake_values / participant_targets[score_columns]) * 100, 0)
     pct_reached[!is.finite(pct_reached)] <- NA
     met_target <- intake_values >= participant_targets[score_columns]
@@ -622,6 +631,7 @@ server <- function(input, output, session) {
       tags$tr(
         tags$td(display_names[col], style = "padding:6px 10px;"),
         tags$td(sprintf("%.2f", intake_values[col]), style = "padding:6px 10px; text-align:right;"),
+        tags$td(sprintf("%.2f", cohort_average_values[col]), style = "padding:6px 10px; text-align:right;"),
         tags$td(
           ifelse(is.na(participant_targets[col]), "NA", sprintf("%.2f", participant_targets[col])),
           style = "padding:6px 10px; text-align:right;"
@@ -648,7 +658,8 @@ server <- function(input, output, session) {
         tags$thead(
           tags$tr(
             tags$th("Food Group", style = "padding:6px 10px; text-align:left; border-bottom:1px solid #ddd;"),
-            tags$th("Intake", style = "padding:6px 10px; text-align:right; border-bottom:1px solid #ddd;"),
+            tags$th("Participant", style = "padding:6px 10px; text-align:right; border-bottom:1px solid #ddd;"),
+            tags$th("Average", style = "padding:6px 10px; text-align:right; border-bottom:1px solid #ddd;"),
             tags$th("Target", style = "padding:6px 10px; text-align:right; border-bottom:1px solid #ddd;"),
             tags$th("% Target", style = "padding:6px 10px; text-align:right; border-bottom:1px solid #ddd;"),
             tags$th("Status", style = "padding:6px 10px; text-align:left; border-bottom:1px solid #ddd;")
